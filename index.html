@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2478d4">
+  <title>Music Memory</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Music Memory</h1>
+      <p>好きな曲を、忘れないように記録。</p>
+    </div>
+    <button id="addTopBtn" class="primary-btn">＋ 曲を登録</button>
+  </header>
+
+  <main class="container">
+    <section id="homeView" class="view active">
+      <div class="stats">
+        <div class="stat-card"><span>登録曲数</span><strong id="songCount">0</strong><small>曲</small></div>
+        <div class="stat-card"><span>アーティスト</span><strong id="artistCount">0</strong><small>組</small></div>
+        <div class="stat-card"><span>タグ</span><strong id="tagCount">0</strong><small>個</small></div>
+      </div>
+
+      <div class="section-title">
+        <h2>最近登録した曲</h2>
+        <button class="text-btn" data-view="listView">すべて見る →</button>
+      </div>
+      <div id="recentSongs" class="song-list"></div>
+    </section>
+
+    <section id="listView" class="view">
+      <div class="section-title">
+        <h2>曲一覧</h2>
+        <button id="addListBtn" class="primary-btn">＋ 曲を登録</button>
+      </div>
+
+      <div class="search-box">
+        <input id="searchInput" type="search" placeholder="曲名・アーティスト名・作品名を検索">
+      </div>
+
+      <div class="filter-grid">
+        <select id="genreFilter"><option value="">ジャンル：すべて</option></select>
+        <select id="yearFilter"><option value="">年代：すべて</option></select>
+        <select id="seasonFilter"><option value="">季節：すべて</option></select>
+        <select id="tagFilter"><option value="">タグ：すべて</option></select>
+        <select id="sortSelect">
+          <option value="newest">登録日：新しい順</option>
+          <option value="oldest">登録日：古い順</option>
+          <option value="titleAsc">曲名：昇順</option>
+          <option value="titleDesc">曲名：降順</option>
+          <option value="artistAsc">アーティスト：昇順</option>
+          <option value="artistDesc">アーティスト：降順</option>
+          <option value="yearAsc">年代：昇順</option>
+          <option value="yearDesc">年代：降順</option>
+        </select>
+      </div>
+
+      <div id="resultCount" class="result-count"></div>
+      <div id="songList" class="song-list"></div>
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">♪</div>
+        <h3>曲がありません</h3>
+        <p>検索条件を変更するか、新しい曲を登録してください。</p>
+      </div>
+    </section>
+
+    <section id="formView" class="view">
+      <div class="section-title">
+        <button id="formBackBtn" class="back-btn">← 戻る</button>
+        <h2 id="formTitle">曲を登録</h2>
+      </div>
+
+      <form id="songForm" class="form-card">
+        <input type="hidden" id="songId">
+
+        <label>曲名 <span>*</span>
+          <input id="title" required maxlength="100" placeholder="例：青と夏">
+        </label>
+
+        <label>アーティスト名 <span>*</span>
+          <input id="artist" required maxlength="100" placeholder="例：Mrs. GREEN APPLE">
+        </label>
+
+        <label>作品名
+          <input id="work" maxlength="100" placeholder="例：青と夏">
+        </label>
+
+        <div class="two-col">
+          <label>年代
+            <select id="year">
+              <option value="">選択してください</option>
+            </select>
+          </label>
+          <label>ジャンル
+            <select id="genre">
+              <option value="">選択してください</option>
+              <option>J-POP</option><option>ロック</option><option>ポップ</option>
+              <option>アニメ</option><option>ゲーム</option><option>ボカロ</option>
+              <option>洋楽</option><option>その他</option>
+            </select>
+          </label>
+        </div>
+
+        <label>季節
+          <select id="season">
+            <option value="">選択してください</option>
+            <option>春</option><option>夏</option><option>秋</option><option>冬</option>
+        </select>
+        </label>
+
+        <label>タグ
+          <div class="tag-input-row">
+            <input id="tagInput" placeholder="例：ドライブ">
+            <button type="button" id="addTagBtn" class="secondary-btn">追加</button>
+          </div>
+          <div id="selectedTags" class="tag-list"></div>
+        </label>
+
+        <label>メモ
+          <textarea id="memo" rows="5" maxlength="1000" placeholder="この曲を好きになったきっかけ、思い出、聴きたい場面など"></textarea>
+        </label>
+
+        <label>音楽リンク
+          <input id="url" type="url" placeholder="https://...">
+          <small>YouTube、Spotify、Apple MusicなどのURLを登録できます。</small>
+        </label>
+
+        <div class="form-actions">
+          <button type="button" id="cancelBtn" class="secondary-btn">キャンセル</button>
+          <button type="submit" class="primary-btn">保存する</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="detailView" class="view">
+      <div class="section-title">
+        <button id="detailBackBtn" class="back-btn">← 戻る</button>
+        <div class="detail-actions">
+          <button id="editBtn" class="secondary-btn">編集</button>
+          <button id="deleteBtn" class="danger-btn">削除</button>
+        </div>
+      </div>
+      <article id="detailCard" class="detail-card"></article>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="homeView">⌂<span>ホーム</span></button>
+    <button class="nav-btn" data-view="listView">♪<span>曲一覧</span></button>
+    <button class="nav-btn" data-view="formView">＋<span>登録</span></button>
+  </nav>
+
+  <script src="script.js"></script>
+</body>
+</html>
