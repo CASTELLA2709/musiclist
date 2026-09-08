@@ -13,7 +13,6 @@
       <h1>Music Memory</h1>
       <p>好きな曲を、忘れないように記録。</p>
     </div>
-    <button id="addTopBtn" class="primary-btn">＋ 曲を登録</button>
   </header>
 
   <main class="container">
@@ -33,8 +32,16 @@
 
     <section id="listView" class="view">
       <div class="section-title">
-        <h2>曲一覧</h2>
-        <button id="addListBtn" class="primary-btn">＋ 曲を登録</button>
+        <h2 id="listTitle">曲一覧</h2>
+      </div>
+
+      <div class="list-toggle" role="tablist" aria-label="表示切替">
+        <button type="button" id="songsTab" class="list-tab active">曲</button>
+        <button type="button" id="artistsTab" class="list-tab">アーティスト</button>
+      </div>
+
+      <div id="artistSection" class="artist-section hidden">
+        <div id="artistList" class="artist-list"></div>
       </div>
 
       <div class="search-box">
@@ -58,6 +65,7 @@
         </select>
       </div>
 
+      <div class="filter-actions"><button id="resetFilterBtn" class="secondary-btn" type="button">リセット</button></div>
       <div id="resultCount" class="result-count"></div>
       <div id="songList" class="song-list"></div>
       <div id="emptyState" class="empty-state hidden">
@@ -67,11 +75,22 @@
       </div>
     </section>
 
-    <section id="formView" class="view">
+    <section id="artistDetailView" class="view">
       <div class="section-title">
-        <button id="formBackBtn" class="back-btn">← 戻る</button>
-        <h2 id="formTitle">曲を登録</h2>
+        <button id="artistDetailBackBtn" class="back-btn">← アーティスト一覧に戻る</button>
       </div>
+      <div class="artist-detail-heading">
+        <h2 id="artistDetailTitle"></h2>
+      </div>
+      <div id="artistSongList" class="song-list"></div>
+      <div id="artistSongEmpty" class="empty-state hidden">
+        <div class="empty-icon">♪</div>
+        <h3>曲がありません</h3>
+      </div>
+    </section>
+
+    <section id="formView" class="view">
+      <div class="form-header"><button id="formBackBtn" class="back-btn">← 戻る</button></div><span id="formTitle" class="hidden">曲を登録</span>
 
       <form id="songForm" class="form-card">
         <input type="hidden" id="songId">

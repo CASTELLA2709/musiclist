@@ -4,6 +4,8 @@ let currentTags=[];
 let currentView="homeView";
 let previousView="listView";
 let currentDetailId=null;
+let selectedArtist="";
+let listMode="songs";
 
 const $=id=>document.getElementById(id);
 const views=document.querySelectorAll(".view");
@@ -14,10 +16,48 @@ function formatDate(v){return new Date(v).toLocaleDateString("ja-JP",{year:"nume
 
 function showView(id){
   views.forEach(v=>v.classList.toggle("active",v.id===id));
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===id));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===id || (id==="artistDetailView" && b.dataset.view==="listView")));
   currentView=id;
   if(id==="homeView") renderHome();
-  if(id==="listView"){populateFilters();renderList()}
+  if(id==="listView"){populateFilters();renderListView()}
+}
+
+function renderListView(){
+  $("songsTab").classList.toggle("active",listMode==="songs");
+  $("artistsTab").classList.toggle("active",listMode==="artists");
+  $("artistSection").classList.toggle("hidden",listMode!=="artists");
+  $("listTitle").textContent=listMode==="artists"?"アーティスト一覧":(selectedArtist?`${selectedArtist}の曲`:"曲一覧");
+  document.querySelector(".search-box").classList.toggle("hidden",listMode!=="songs");
+  document.querySelector(".filter-grid").classList.toggle("hidden",listMode!=="songs");
+  document.querySelector(".filter-actions").classList.toggle("hidden",listMode!=="songs");
+  $("resultCount").classList.toggle("hidden",listMode!=="songs");
+  $("songList").classList.toggle("hidden",listMode!=="songs");
+  $("emptyState").classList.toggle("hidden",listMode!=="songs");
+  if(listMode==="artists") renderArtistList();
+  else renderList();
+}
+
+function renderArtistList(){
+  const artists=[...new Set(songs.map(s=>s.artist).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),"ja"));
+  const el=$("artistList");
+  if(!artists.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">♪</div><h3>アーティストがありません</h3><p>曲を登録するとアーティストが表示されます。</p></div>';
+    return;
+  }
+  el.innerHTML=artists.map(a=>
+    `<button type="button" class="artist-row" data-artist="${esc(a)}"><span class="artist-name">${esc(a)}</span><span class="artist-arrow">›</span></button>`
+  ).join("");
+  el.querySelectorAll(".artist-row").forEach(btn=>btn.onclick=()=>openArtistDetail(btn.dataset.artist));
+}
+
+function openArtistDetail(artist){
+  selectedArtist=artist;
+  $("artistDetailTitle").textContent=artist;
+  const artistSongs=songs.filter(s=>s.artist===artist).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  $("artistSongList").innerHTML=artistSongs.map(artistSongCard).join("");
+  $("artistSongEmpty").classList.toggle("hidden",artistSongs.length!==0);
+  bindCards();
+  showView("artistDetailView");
 }
 
 function resetForm(){
@@ -35,11 +75,15 @@ function populateFilters(){
   fill("seasonFilter",["春","夏","秋","冬"].filter(x=>values("season").includes(x)),"季節",false);
   const tags=[...new Set(songs.flatMap(s=>s.tags||[]))];fill("tagFilter",tags,"タグ");
 }
+
 function card(s){
  return `<article class="song-card" data-id="${esc(s.id)}">
    <div class="song-main"><div><p class="song-title">${esc(s.title)}</p><div class="song-artist">${esc(s.artist)}</div>${s.work?`<div class="song-work">${esc(s.work)}</div>`:""}</div><span class="song-date">${formatDate(s.createdAt)}</span></div>
    <div class="song-meta">${s.year?`<span class="badge">${esc(s.year)}年</span>`:""}${s.genre?`<span class="badge">${esc(s.genre)}</span>`:""}${s.season?`<span class="badge">${esc(s.season)}</span>`:""}${(s.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}</div>
  </article>`
+}
+function artistSongCard(s){
+ return `<article class="song-card artist-song-card" data-id="${esc(s.id)}"><div class="song-main"><div><p class="song-title">${esc(s.title)}</p></div></div></article>`
 }
 function bindCards(){document.querySelectorAll(".song-card").forEach(c=>c.onclick=()=>openDetail(c.dataset.id))}
 function renderHome(){
@@ -54,7 +98,7 @@ function renderList(){
  const q=$("searchInput").value.trim().toLowerCase(),g=$("genreFilter").value,y=$("yearFilter").value,se=$("seasonFilter").value,t=$("tagFilter").value,sort=$("sortSelect").value;
  let a=songs.filter(s=>{
    const text=[s.title,s.artist,s.work].join(" ").toLowerCase();
-   return (!q||text.includes(q))&&(!g||s.genre===g)&&(!y||String(s.year)===y)&&(!se||s.season===se)&&(!t||(s.tags||[]).includes(t))
+   return (!q||text.includes(q))&&(!selectedArtist||s.artist===selectedArtist)&&(!g||s.genre===g)&&(!y||String(s.year)===y)&&(!se||s.season===se)&&(!t||(s.tags||[]).includes(t))
  });
  const cmp=(x,y)=>String(x).localeCompare(String(y),"ja");
  a.sort((x,z)=>{
@@ -107,10 +151,19 @@ $("songForm").onsubmit=e=>{
  if(old)songs=songs.map(s=>s.id===id?data:s);else songs.push(data);save();showView("listView")
 };
 $("addTagBtn").onclick=addTag;$("tagInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addTag()}});
-$("addTopBtn").onclick=openNew;$("addListBtn").onclick=openNew;$("editBtn").onclick=editCurrent;$("deleteBtn").onclick=deleteCurrent;
+$("resetFilterBtn").onclick=()=>{
+ ["searchInput","genreFilter","yearFilter","seasonFilter","tagFilter"].forEach(id=>$(id).value="");
+ $("sortSelect").value="newest";
+ selectedArtist="";
+ renderListView();
+};
+$("songsTab").onclick=()=>{listMode="songs";renderListView()};
+$("artistsTab").onclick=()=>{listMode="artists";selectedArtist="";renderListView()};
+$("editBtn").onclick=editCurrent;$("deleteBtn").onclick=deleteCurrent;
 $("cancelBtn").onclick=()=>showView(previousView==="detailView"?"listView":previousView);
 $("formBackBtn").onclick=()=>showView(previousView==="detailView"?"detailView":previousView);
+$("artistDetailBackBtn").onclick=()=>{selectedArtist="";showView("listView");};
 $("detailBackBtn").onclick=()=>showView(previousView==="formView"?"listView":previousView);
 document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>showView(b.dataset.view));
 ["searchInput","genreFilter","yearFilter","seasonFilter","tagFilter","sortSelect"].forEach(id=>$(id).addEventListener("input",renderList));
-populateYears();populateFilters();renderHome();
+populateYears();populateFilters();renderListView();renderHome();

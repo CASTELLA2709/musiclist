@@ -21,3 +21,32 @@ button{cursor:pointer}
 .detail-actions{display:flex;gap:7px}.empty-state{text-align:center;padding:55px 20px;color:#697586}.empty-icon{font-size:42px;color:#2478d4}.empty-state h3{color:#333;margin-bottom:6px}.hidden{display:none!important}
 .bottom-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;height:66px;background:#fff;border-top:1px solid #dfe4ea;display:flex;justify-content:center}.nav-btn{flex:1;max-width:160px;border:0;background:transparent;color:#788393;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:19px}.nav-btn span{font-size:11px;margin-top:2px}.nav-btn.active{color:#2478d4;font-weight:700}
 @media(max-width:700px){.app-header{padding:17px 14px}.app-header h1{font-size:21px}.app-header p{display:none}.app-header .primary-btn{font-size:12px;padding:9px}.container{padding:18px 13px}.stats{gap:7px}.stat-card{padding:13px 10px}.stat-card strong{font-size:22px}.filter-grid{grid-template-columns:1fr 1fr}.filter-grid select:last-child{grid-column:1/-1}.two-col{grid-template-columns:1fr}.form-card{padding:17px}.detail-card{padding:20px}.detail-title{font-size:24px}.song-card{padding:14px}.song-date{display:none}}
+
+.app-header{position:fixed;top:0;left:0;right:0;z-index:100}.container{padding-top:105px}.form-header{display:flex;align-items:center;min-height:38px;margin-bottom:12px}.filter-actions{display:flex;justify-content:flex-end;margin:-6px 0 14px}@media(max-width:700px){.container{padding-top:86px}input,select,textarea{font-size:16px!important}}
+
+.artist-section{margin:14px 0 12px}
+.artist-section-title{font-size:13px;font-weight:700;color:#697586;margin-bottom:8px}
+.artist-filter{display:flex;flex-wrap:wrap;gap:7px}
+.artist-chip{border:1px solid #d5dae2;border-radius:999px;padding:7px 12px;background:#fff;color:#3e4b5e;font-size:13px}
+.artist-chip:hover{border-color:#b8c9dc}
+.artist-chip.selected{background:#2478d4;border-color:#2478d4;color:#fff;font-weight:700}
+.artist-empty{font-size:13px;color:#8993a1}
+@media(max-width:700px){.artist-chip{font-size:13px;padding:7px 10px}}
+
+.list-toggle{display:flex;gap:0;margin:0 0 16px;border-bottom:1px solid #dfe4ea}
+.list-tab{border:0;background:transparent;color:#788393;padding:10px 22px;font-weight:600;border-bottom:3px solid transparent;margin-bottom:-1px}
+.list-tab.active{color:#2478d4;border-bottom-color:#2478d4}
+.artist-list{display:grid;gap:9px}
+.artist-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:#fff;border:1px solid #e3e7ed;border-radius:12px;text-align:left;color:#222}
+.artist-row:hover{border-color:#b8c9dc}
+.artist-name{font-size:16px;font-weight:700}
+.artist-count{font-size:13px;color:#697586;white-space:nowrap}
+@media(max-width:700px){.list-tab{flex:1;padding:10px 14px}.artist-row{padding:14px}.artist-name{font-size:15px}}
+.artist-detail-heading{background:#fff;border:1px solid #e3e7ed;border-radius:14px;padding:18px 20px;margin-bottom:14px}
+.artist-detail-heading h2{margin:0;font-size:22px}
+.artist-arrow{font-size:24px;color:#8993a1;line-height:1}
+@media(max-width:700px){.artist-detail-heading{padding:15px 16px}.artist-detail-heading h2{font-size:19px}}
+
+/* アーティスト別の曲一覧は曲名だけを表示 */
+.artist-song-card .song-main { margin: 0; }
+.artist-song-card .song-title { margin: 0; }
