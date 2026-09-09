@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#2478d4">
+  <meta name="theme-color" content="#8f7ac8">
   <title>Music Memory</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="app-header">
-    <div>
-      <h1>Music Memory</h1>
-      <p>好きな曲を、忘れないように記録。</p>
+    <div class="brand">
+      <div class="brand-mark">♪</div>
+      <div>
+        <h1>Music Memory</h1>
+        <p>好きな曲を、忘れないように記録。</p>
+      </div>
     </div>
   </header>
 
@@ -38,6 +41,12 @@
       <div class="list-toggle" role="tablist" aria-label="表示切替">
         <button type="button" id="songsTab" class="list-tab active">曲</button>
         <button type="button" id="artistsTab" class="list-tab">アーティスト</button>
+        <button type="button" id="playlistsTab" class="list-tab">プレイリスト</button>
+      </div>
+
+      <div id="playlistSection" class="playlist-section hidden">
+        <div class="playlist-toolbar"><button type="button" id="createPlaylistBtn" class="primary-btn">＋ プレイリストを作成</button></div>
+        <div id="playlistList" class="playlist-list"></div>
       </div>
 
       <div id="artistSection" class="artist-section hidden">
@@ -73,6 +82,19 @@
         <h3>曲がありません</h3>
         <p>検索条件を変更するか、新しい曲を登録してください。</p>
       </div>
+    </section>
+
+    <section id="playlistDetailView" class="view">
+      <div class="section-title">
+        <button id="playlistDetailBackBtn" class="back-btn">← プレイリスト一覧に戻る</button>
+        <div class="detail-actions"><button id="renamePlaylistBtn" class="secondary-btn">編集</button><button id="deletePlaylistBtn" class="danger-btn">削除</button></div>
+      </div>
+      <div class="artist-detail-heading playlist-detail-heading">
+        <h2 id="playlistDetailTitle"></h2><div id="playlistDetailCount" class="playlist-detail-count"></div>
+      </div>
+      <div class="playlist-detail-actions"><button id="addSongsToPlaylistBtn" class="primary-btn">＋ 曲を追加</button></div>
+      <div id="playlistSongList" class="song-list"></div>
+      <div id="playlistSongEmpty" class="empty-state hidden"><div class="empty-icon">♫</div><h3>まだ曲がありません</h3><p>「曲を追加」から登録済みの曲を選べます。</p></div>
     </section>
 
     <section id="artistDetailView" class="view">
@@ -167,10 +189,30 @@
   </main>
 
   <nav class="bottom-nav">
-    <button class="nav-btn active" data-view="homeView">⌂<span>ホーム</span></button>
-    <button class="nav-btn" data-view="listView">♪<span>曲一覧</span></button>
-    <button class="nav-btn" data-view="formView">＋<span>登録</span></button>
+    <button class="nav-btn active" data-view="homeView"><span class="nav-icon">⌂</span><span>ホーム</span></button>
+    <button class="nav-btn" data-view="listView"><span class="nav-icon">♫</span><span>ライブラリ</span></button>
+    <button class="nav-btn add-nav" data-view="formView"><span class="nav-icon">＋</span><span>登録</span></button>
   </nav>
+
+  <div id="playlistModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="playlistModalTitle">
+      <div class="modal-header"><h3 id="playlistModalTitle">プレイリストを作成</h3><button type="button" class="modal-close" data-close-modal>×</button></div>
+      <label>プレイリスト名<input id="playlistNameInput" maxlength="50" placeholder="例：ドライブ"></label>
+      <label>説明（任意）<textarea id="playlistDescriptionInput" rows="3" maxlength="200" placeholder="このプレイリストについて"></textarea></label>
+      <div class="modal-actions"><button type="button" class="secondary-btn" data-close-modal>キャンセル</button><button type="button" id="savePlaylistBtn" class="primary-btn">作成</button></div>
+    </div>
+  </div>
+
+  <div id="songPickerModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-song-picker></div>
+    <div class="modal-card picker-card" role="dialog" aria-modal="true" aria-labelledby="songPickerTitle">
+      <div class="modal-header"><h3 id="songPickerTitle">曲を追加</h3><button type="button" class="modal-close" data-close-song-picker>×</button></div>
+      <div class="search-box"><input id="playlistSongSearch" type="search" placeholder="曲名・アーティスト名を検索"></div>
+      <div id="songPickerList" class="song-picker-list"></div>
+      <div class="modal-actions"><button type="button" class="secondary-btn" data-close-song-picker>キャンセル</button><button type="button" id="confirmAddSongsBtn" class="primary-btn">追加する</button></div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
