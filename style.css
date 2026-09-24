@@ -27,38 +27,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .library-tools{margin-bottom:14px}.search-row{display:flex;align-items:stretch;gap:8px}.library-search{position:relative;flex:1;margin:0}.library-search input{padding-left:38px;padding-right:38px}.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-52%);font-size:21px;color:#8f8998;pointer-events:none}.clear-search{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:#eeeaf2;color:#77717f;width:27px;height:27px;border-radius:50%;font-size:17px;line-height:1}.tool-btn{border:1px solid var(--line);background:#fff;color:#4c4655;border-radius:11px;padding:0 14px;font-size:13px;font-weight:700;white-space:nowrap}.tool-btn:hover{border-color:#c8bde1;background:#faf9fc}.filter-count{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;margin-left:5px;border-radius:999px;background:var(--accent);color:#fff;font-size:10px}.filter-panel{margin-top:8px;padding:11px;border:1px solid #e3ddec;background:#faf9fc;border-radius:13px}.filter-panel .filter-grid{margin:0;grid-template-columns:repeat(4,1fr);gap:7px}.filter-panel-footer{display:flex;justify-content:flex-end;margin-top:8px}.text-reset-btn{border:0;background:transparent;color:var(--accent-dark);font-size:12px;font-weight:700;padding:4px 2px}.list-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.result-count{margin:0}.sort-control{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;white-space:nowrap}.sort-control select{width:auto;min-width:175px;font-size:12px;padding:8px 30px 8px 10px}.filter-actions{display:none}
 @media(max-width:700px){.search-row{gap:7px}.tool-btn{padding:0 11px}.filter-panel .filter-grid{grid-template-columns:1fr 1fr}.list-controls{align-items:flex-start}.sort-control{flex:1;justify-content:flex-end}.sort-control span{display:none}.sort-control select{min-width:145px;max-width:58vw}.filter-panel{padding:9px}}
 
-/* 曲一覧：頭文字インデックス */
-.song-index{
-  position:sticky;
-  top:8px;
-  z-index:5;
-  display:flex;
-  flex-wrap:wrap;
-  gap:5px;
-  margin:0 0 12px;
-  padding:8px;
-  background:rgba(250,249,252,.94);
-  border:1px solid #e3ddec;
-  border-radius:13px;
-  backdrop-filter:blur(8px);
-}
-.song-index-btn{
-  min-width:30px;
-  height:30px;
-  padding:0 7px;
-  border:1px solid var(--line);
-  border-radius:9px;
-  background:#fff;
-  color:#514b5a;
-  font-size:12px;
-  font-weight:800;
-  cursor:pointer;
-}
-.song-index-btn:hover,
-.song-index-btn:active{
-  border-color:#c8bde1;
-  background:#f5f1fb;
-}
 .song-group{scroll-margin-top:82px}
 .song-group + .song-group{margin-top:16px}
 .song-group-heading{
