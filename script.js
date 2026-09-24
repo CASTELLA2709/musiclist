@@ -11,6 +11,155 @@ let listMode="songs";
 let currentPlaylistId=null;
 let editingPlaylistId=null;
 let selectedPickerSongIds=new Set();
+// ===== YouTube連携 =====
+// Google Cloud ConsoleでOAuth 2.0「ウェブアプリ」のクライアントIDを発行し、
+// 下記 GOOGLE_CLIENT_ID を自分のクライアントIDに置き換えてください。
+// 承認済みJavaScript生成元には、このアプリを公開しているURL（例: https://xxxxx.github.io）を登録します。
+const GOOGLE_CLIENT_ID="25670917871-k7li327gfkds9e4cork8b8c1rnf7552e.apps.googleusercontent.com";
+const YOUTUBE_SCOPE="https://www.googleapis.com/auth/youtube";
+let googleTokenClient=null;
+let youtubeAccessToken=localStorage.getItem("musicMemoryYoutubeAccessToken")||"";
+
+function initYouTubeAuth(){
+  if(!window.google?.accounts?.oauth2)return;
+  googleTokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:GOOGLE_CLIENT_ID,
+    scope:YOUTUBE_SCOPE,
+    callback:(resp)=>{
+      if(resp.error){console.error("Google OAuth error",resp);alert("YouTube連携に失敗しました。Google Cloudの設定を確認してください。");return;}
+      youtubeAccessToken=resp.access_token;
+      localStorage.setItem("musicMemoryYoutubeAccessToken",youtubeAccessToken);
+      updateYouTubeStatus();
+      syncAllLocalPlaylistsToYouTube();
+    }
+  });
+  updateYouTubeStatus();
+}
+function connectYouTube(){
+  if(GOOGLE_CLIENT_ID.startsWith("YOUR_")){
+    alert("script.js の GOOGLE_CLIENT_ID に、Google Cloud Consoleで作成したOAuthクライアントIDを設定してください。");
+    return;
+  }
+  if(!googleTokenClient){alert("Google認証の読み込み中です。数秒待ってからもう一度お試しください。");return;}
+  googleTokenClient.requestAccessToken({prompt:youtubeAccessToken?"":"consent"});
+}
+
+async function syncAllLocalPlaylistsToYouTube(){
+  if(!youtubeAccessToken)return;
+  let created=0;
+  try{
+    for(const p of playlists){
+      if(!p.youtubePlaylistId){
+        await createYouTubePlaylist(p);
+        p.updatedAt=new Date().toISOString();
+        created++;
+      }
+    }
+    save();renderListView();
+    if(created)alert(`${created}件のプレイリストをYouTube側にも作成しました。`);
+  }catch(e){
+    save();
+    alert("YouTube同期中にエラーが発生しました。\n"+e.message);
+  }
+}
+function updateYouTubeStatus(){
+  const el=$("youtubeConnectionStatus");
+  const btn=$("youtubeConnectBtn");
+  if(!el)return;
+  if(youtubeAccessToken){el.textContent="✓ YouTube連携済み";btn.textContent="YouTube再連携";}
+  else {el.textContent="YouTube未連携";btn.textContent="YouTube連携";}
+}
+async function youtubeRequest(path,options={}){
+  if(!youtubeAccessToken)throw new Error("YouTube未連携です。");
+  const res=await fetch("https://www.googleapis.com/youtube/v3/"+path,{
+    ...options,
+    headers:{"Authorization":"Bearer "+youtubeAccessToken,"Content-Type":"application/json",...(options.headers||{})}
+  });
+  if(res.status===401){
+    youtubeAccessToken="";
+    localStorage.removeItem("musicMemoryYoutubeAccessToken");
+    updateYouTubeStatus();
+    throw new Error("YouTubeの認証期限が切れました。再連携してください。");
+  }
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data?.error?.message||"YouTube APIエラー");
+  return data;
+}
+function getYouTubeVideoId(url){
+  if(!url)return "";
+  try{
+    const u=new URL(url);
+    if(u.hostname==="youtu.be")return u.pathname.slice(1).split("/")[0];
+    if(u.hostname.includes("youtube.com")){
+      if(u.pathname==="/watch")return u.searchParams.get("v")||"";
+      if(u.pathname.startsWith("/shorts/"))return u.pathname.split("/")[2]||"";
+      if(u.pathname.startsWith("/embed/"))return u.pathname.split("/")[2]||"";
+    }
+  }catch(e){}
+  return "";
+}
+function getSongYoutubeId(song){return song?.youtubeVideoId||getYouTubeVideoId(song?.url||"");}
+async function createYouTubePlaylist(p){
+  const data=await youtubeRequest("playlists?part=snippet,status",{
+    method:"POST",
+    body:JSON.stringify({snippet:{title:p.name,description:p.description||"Music Memoryから作成"},status:{privacyStatus:"private"}})
+  });
+  p.youtubePlaylistId=data.id;
+  p.youtubePlaylistItemIds={};
+  await syncPlaylistSongs(p,[]);
+}
+async function addYouTubePlaylistItem(playlistId,videoId){
+  return youtubeRequest("playlistItems?part=snippet",{
+    method:"POST",
+    body:JSON.stringify({snippet:{playlistId,resourceId:{kind:"youtube#video",videoId}}})
+  });
+}
+async function deleteYouTubePlaylistItem(itemId){
+  return youtubeRequest("playlistItems",{
+    method:"DELETE",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({})
+  });
+}
+async function syncPlaylistSongs(p,oldSongIds=[]){
+  if(!youtubeAccessToken||!p.youtubePlaylistId)return;
+  p.youtubePlaylistItemIds=p.youtubePlaylistItemIds||{};
+  const oldSet=new Set(oldSongIds);
+  const newSet=new Set(p.songIds);
+  // 削除
+  for(const songId of oldSet){
+    if(!newSet.has(songId) && p.youtubePlaylistItemIds[songId]){
+      await youtubeRequest("playlistItems?id="+encodeURIComponent(p.youtubePlaylistItemIds[songId]),{method:"DELETE"});
+      delete p.youtubePlaylistItemIds[songId];
+    }
+  }
+  // 追加（YouTube動画URL/IDが登録されている曲のみ）
+  for(const songId of p.songIds){
+    if(oldSet.has(songId)||p.youtubePlaylistItemIds[songId])continue;
+    const song=songs.find(s=>s.id===songId);
+    const videoId=getSongYoutubeId(song);
+    if(!videoId)continue;
+    const item=await addYouTubePlaylistItem(p.youtubePlaylistId,videoId);
+    p.youtubePlaylistItemIds[songId]=item.id;
+  }
+}
+async function updateYouTubePlaylistTitle(p){
+  if(!youtubeAccessToken||!p.youtubePlaylistId)return;
+  await youtubeRequest("playlists?part=snippet",{
+    method:"PUT",
+    body:JSON.stringify({id:p.youtubePlaylistId,snippet:{title:p.name,description:p.description||"Music Memoryから作成"}})
+  });
+}
+async function deleteYouTubePlaylist(p){
+  if(!youtubeAccessToken||!p.youtubePlaylistId)return;
+  await youtubeRequest("playlists?id="+encodeURIComponent(p.youtubePlaylistId),{method:"DELETE"});
+}
+function openYouTubePlaylist(){
+  const p=playlists.find(x=>x.id===currentPlaylistId);if(!p)return;
+  if(!p.youtubePlaylistId){alert("YouTube側のプレイリストがまだ作成されていません。YouTube連携後にプレイリストを保存してください。");return;}
+  window.open("https://music.youtube.com/playlist?list="+encodeURIComponent(p.youtubePlaylistId),"_blank","noopener");
+}
+
 
 const $=id=>document.getElementById(id);
 const views=document.querySelectorAll(".view");
@@ -31,7 +180,7 @@ function renderListView(){
   $("artistSection").classList.toggle("hidden",listMode!=="artists");
   $("playlistSection").classList.toggle("hidden",listMode!=="playlists");
   $("listTitle").textContent=listMode==="artists"?"アーティスト一覧":listMode==="playlists"?"プレイリスト":"曲一覧";
-  [".search-box",".filter-grid",".filter-actions"].forEach(sel=>document.querySelector(sel).classList.toggle("hidden",listMode!=="songs"));
+  [".library-tools"].forEach(sel=>document.querySelector(sel).classList.toggle("hidden",listMode!=="songs"));
   $("resultCount").classList.toggle("hidden",listMode!=="songs");
   $("songList").classList.toggle("hidden",listMode!=="songs");
   $("emptyState").classList.toggle("hidden",listMode!=="songs");
@@ -123,11 +272,85 @@ function playlistSongCard(s){return `<article class="song-card playlist-song-car
 function resetForm(){$("songForm").reset();$("songId").value="";currentTags=[];renderTags();$("formTitle").textContent="曲を登録"}
 function populateYears(){const y=$("year");for(let n=new Date().getFullYear();n>=1950;n--){const o=document.createElement("option");o.value=n;o.textContent=n+"年";y.appendChild(o)}}
 function populateFilters(){const values=key=>[...new Set(songs.map(s=>s[key]).filter(Boolean))];const fill=(id,arr,label,sort=true)=>{const el=$(id),old=el.value;el.innerHTML=`<option value="">${label}：すべて</option>`;if(sort)arr.sort((a,b)=>String(a).localeCompare(String(b),"ja"));arr.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;el.appendChild(o)});el.value=old};fill("genreFilter",values("genre"),"ジャンル");fill("yearFilter",values("year"),"年代",false);fill("seasonFilter",["春","夏","秋","冬"].filter(x=>values("season").includes(x)),"季節",false);fill("tagFilter",[...new Set(songs.flatMap(s=>s.tags||[]))],"タグ")}
-function card(s){return `<article class="song-card" data-id="${esc(s.id)}"><div class="song-main"><div><p class="song-title">${esc(s.title)}</p><div class="song-artist">${esc(s.artist)}</div>${s.work?`<div class="song-work">${esc(s.work)}</div>`:""}</div><span class="song-date">${formatDate(s.createdAt)}</span></div><div class="song-meta">${s.year?`<span class="badge">${esc(s.year)}年</span>`:""}${s.genre?`<span class="badge">${esc(s.genre)}</span>`:""}${s.season?`<span class="badge">${esc(s.season)}</span>`:""}${(s.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}</div></article>`}
+function card(s){return `<article class="song-card" data-id="${esc(s.id)}"><div class="song-list-main"><div class="song-list-info"><p class="song-title">${esc(s.title)}</p><div class="song-artist">${esc(s.artist||"アーティスト未設定")}</div></div><div class="song-list-right">${s.year?`<span class="song-year">${esc(s.year)}年</span>`:""}<span class="song-arrow">›</span></div></div></article>`}
 function artistSongCard(s){return `<article class="song-card artist-song-card" data-id="${esc(s.id)}"><div class="song-main"><div><p class="song-title">${esc(s.title)}</p></div></div></article>`}
 function bindCards(){document.querySelectorAll(".song-card").forEach(c=>c.onclick=()=>openDetail(c.dataset.id))}
 function renderHome(){$("songCount").textContent=songs.length;$("artistCount").textContent=new Set(songs.map(s=>s.artist).filter(Boolean)).size;$("tagCount").textContent=new Set(songs.flatMap(s=>s.tags||[])).size;const recent=[...songs].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);$("recentSongs").innerHTML=recent.length?recent.map(card).join(""):`<div class="empty-state"><div class="empty-icon">♪</div><h3>まだ曲がありません</h3><p>お気に入りの曲を登録してみましょう。</p></div>`;bindCards()}
-function renderList(){const q=$("searchInput").value.trim().toLowerCase(),g=$("genreFilter").value,y=$("yearFilter").value,se=$("seasonFilter").value,t=$("tagFilter").value,sort=$("sortSelect").value;let a=songs.filter(s=>{const text=[s.title,s.artist,s.work].join(" ").toLowerCase();return(!q||text.includes(q))&&(!selectedArtist||s.artist===selectedArtist)&&(!g||s.genre===g)&&(!y||String(s.year)===y)&&(!se||s.season===se)&&(!t||(s.tags||[]).includes(t))});const cmp=(x,y)=>String(x).localeCompare(String(y),"ja");a.sort((x,z)=>{if(sort==="newest")return new Date(z.createdAt)-new Date(x.createdAt);if(sort==="oldest")return new Date(x.createdAt)-new Date(z.createdAt);if(sort==="titleAsc")return cmp(x.title,z.title);if(sort==="titleDesc")return cmp(z.title,x.title);if(sort==="artistAsc")return cmp(x.artist,z.artist);if(sort==="artistDesc")return cmp(z.artist,x.artist);if(sort==="yearAsc")return(x.year||9999)-(z.year||9999);return(z.year||0)-(x.year||0)});$("resultCount").textContent=`${a.length}曲`;$("songList").innerHTML=a.map(card).join("");$("emptyState").classList.toggle("hidden",a.length!==0);bindCards()}
+function updateFilterUI(){
+  const ids=["genreFilter","yearFilter","seasonFilter","tagFilter"];
+  const count=ids.filter(id=>$(id).value).length;
+  $("activeFilterCount").textContent=count;
+  $("activeFilterCount").classList.toggle("hidden",count===0);
+  $("clearSearchBtn").classList.toggle("hidden",!$("searchInput").value);
+}
+function getSongGroupKey(title){
+  const first=String(title||"").trim().charAt(0);
+  if(!first)return "その他";
+  const upper=first.toUpperCase();
+  if(/^[A-Z]$/.test(upper))return upper;
+  const hira=first.charCodeAt(0)>=0x30A1&&first.charCodeAt(0)<=0x30F6
+    ?String.fromCharCode(first.charCodeAt(0)-0x60):first;
+  const rows=[
+    {key:"あ",chars:"あいうえおぁぃぅぇぉ"},
+    {key:"か",chars:"かきくけこがぎぐげご"},
+    {key:"さ",chars:"さしすせそざじずぜぞ"},
+    {key:"た",chars:"たちつてとだぢづでどっ"},
+    {key:"な",chars:"なにぬねの"},
+    {key:"は",chars:"はひふへほばびぶべぼぱぴぷぺぽ"},
+    {key:"ま",chars:"まみむめも"},
+    {key:"や",chars:"やゆよゃゅょ"},
+    {key:"ら",chars:"らりるれろ"},
+    {key:"わ",chars:"わをん"}
+  ];
+  const row=rows.find(r=>r.chars.includes(hira));
+  return row?row.key:"その他";
+}
+function renderList(){
+  updateFilterUI();
+  const q=$("searchInput").value.trim().toLowerCase(),g=$("genreFilter").value,y=$("yearFilter").value,se=$("seasonFilter").value,t=$("tagFilter").value,sort=$("sortSelect").value;
+  let a=songs.filter(s=>{
+    const text=[s.title,s.artist,s.work].join(" ").toLowerCase();
+    return(!q||text.includes(q))&&(!selectedArtist||s.artist===selectedArtist)&&(!g||s.genre===g)&&(!y||String(s.year)===y)&&(!se||s.season===se)&&(!t||(s.tags||[]).includes(t))
+  });
+  const cmp=(x,y)=>String(x).localeCompare(String(y),"ja");
+  a.sort((x,z)=>{
+    if(sort==="newest")return new Date(z.createdAt)-new Date(x.createdAt);
+    if(sort==="oldest")return new Date(x.createdAt)-new Date(z.createdAt);
+    if(sort==="titleAsc")return cmp(x.title,z.title);
+    if(sort==="titleDesc")return cmp(z.title,x.title);
+    if(sort==="artistAsc")return cmp(x.artist,z.artist);
+    if(sort==="artistDesc")return cmp(z.artist,x.artist);
+    if(sort==="yearAsc")return(x.year||9999)-(z.year||9999);
+    return(z.year||0)-(x.year||0)
+  });
+  $("resultCount").textContent=`${a.length}曲`;
+  const index=$("songIndex");
+  const groups=new Map();
+  a.forEach(s=>{
+    const key=getSongGroupKey(s.title);
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push(s);
+  });
+  const kanaOrder=["あ","か","さ","た","な","は","ま","や","ら","わ"];
+  const keys=[...groups.keys()].sort((x,z)=>{
+    if(x==="その他")return 1;
+    if(z==="その他")return -1;
+    const xa=/^[A-Z]$/.test(x),za=/^[A-Z]$/.test(z);
+    if(xa&&za)return x.localeCompare(z);
+    if(xa)return -1;
+    if(za)return 1;
+    return kanaOrder.indexOf(x)-kanaOrder.indexOf(z);
+  });
+  index.innerHTML=keys.map(k=>`<button type="button" class="song-index-btn" data-target="song-group-${k}" aria-label="${k}へ移動">${k}</button>`).join("");
+  index.classList.toggle("hidden",a.length===0||keys.length<2);
+  $("songList").innerHTML=keys.map(k=>`<section class="song-group" id="song-group-${k}"><h3 class="song-group-heading">${k}</h3><div class="song-group-list">${groups.get(k).map(card).join("")}</div></section>`).join("");
+  index.querySelectorAll(".song-index-btn").forEach(btn=>btn.onclick=()=>{
+    const target=$(btn.dataset.target);
+    if(target)target.scrollIntoView({behavior:"smooth",block:"start"});
+  });
+  $("emptyState").classList.toggle("hidden",a.length!==0);
+  bindCards();
+}
 function renderTags(){$("selectedTags").innerHTML=currentTags.map((t,i)=>`<span class="tag-item">#${esc(t)} <button type="button" onclick="removeTag(${i})">×</button></span>`).join("")}
 window.removeTag=i=>{currentTags.splice(i,1);renderTags()};function addTag(){const v=$("tagInput").value.trim();if(v&&!currentTags.includes(v)){currentTags.push(v);renderTags()}$("tagInput").value=""}
 function openNew(){resetForm();previousView=currentView==="formView"?"homeView":currentView;showView("formView")}
@@ -138,18 +361,57 @@ function deleteCurrent(){if(!currentDetailId)return;if(confirm("この曲を削�
 $("songForm").onsubmit=e=>{e.preventDefault();const id=$("songId").value,old=songs.find(s=>s.id===id);const data={id:id||crypto.randomUUID(),title:$("title").value.trim(),artist:$("artist").value.trim(),work:$("work").value.trim(),year:$("year").value,genre:$("genre").value,season:$("season").value,tags:[...currentTags],memo:$("memo").value.trim(),url:$("url").value.trim(),createdAt:old?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};if(old)songs=songs.map(s=>s.id===id?data:s);else songs.push(data);save();resetForm();showView("listView")};
 function openPlaylistModal(editId=null){editingPlaylistId=editId;const p=editId?playlists.find(x=>x.id===editId):null;$("playlistModalTitle").textContent=p?"プレイリストを編集":"プレイリストを作成";$("playlistNameInput").value=p?.name||"";$("playlistDescriptionInput").value=p?.description||"";$("savePlaylistBtn").textContent=p?"保存":"作成";$("playlistModal").classList.remove("hidden");$("playlistModal").setAttribute("aria-hidden","false");setTimeout(()=>$("playlistNameInput").focus(),0)}
 function closePlaylistModal(){$("playlistModal").classList.add("hidden");$("playlistModal").setAttribute("aria-hidden","true");editingPlaylistId=null}
-function savePlaylist(){const name=$("playlistNameInput").value.trim();if(!name){alert("プレイリスト名を入力してください。");return}const description=$("playlistDescriptionInput").value.trim();if(editingPlaylistId){const p=playlists.find(x=>x.id===editingPlaylistId);if(p){p.name=name;p.description=description}}else playlists.push({id:crypto.randomUUID(),name,description,songIds:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});save();closePlaylistModal();renderListView()}
+async function savePlaylist(){
+  const name=$("playlistNameInput").value.trim();
+  if(!name){alert("プレイリスト名を入力してください。");return}
+  const description=$("playlistDescriptionInput").value.trim();
+  if(editingPlaylistId){
+    const p=playlists.find(x=>x.id===editingPlaylistId);
+    if(!p)return;
+    const oldName=p.name;
+    p.name=name;p.description=description;p.updatedAt=new Date().toISOString();
+    save();closePlaylistModal();renderListView();
+    if(youtubeAccessToken&&p.youtubePlaylistId&&oldName!==name){
+      try{await updateYouTubePlaylistTitle(p);save();}catch(e){alert("アプリ側は更新しましたが、YouTube側の更新に失敗しました。\n"+e.message);}
+    }
+  }else{
+    const p={id:crypto.randomUUID(),name,description,songIds:[],youtubePlaylistId:null,youtubePlaylistItemIds:{},createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    playlists.push(p);save();closePlaylistModal();renderListView();
+    if(youtubeAccessToken){
+      try{await createYouTubePlaylist(p);p.updatedAt=new Date().toISOString();save();renderListView();}
+      catch(e){alert("アプリ側には作成しましたが、YouTube側の作成に失敗しました。\n"+e.message);}
+    }
+  }
+}
 function openSongPicker(){const p=playlists.find(x=>x.id===currentPlaylistId);if(!p)return;selectedPickerSongIds=new Set(p.songIds);$("playlistSongSearch").value="";renderSongPicker();$("songPickerModal").classList.remove("hidden");$("songPickerModal").setAttribute("aria-hidden","false")}
 function closeSongPicker(){$("songPickerModal").classList.add("hidden");$("songPickerModal").setAttribute("aria-hidden","true");selectedPickerSongIds.clear()}
 function renderSongPicker(){const q=$("playlistSongSearch").value.trim().toLowerCase();const p=playlists.find(x=>x.id===currentPlaylistId);if(!p)return;const list=songs.filter(s=>!q||[s.title,s.artist,s.work].join(" ").toLowerCase().includes(q));const el=$("songPickerList");if(!list.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">♪</div><h3>曲がありません</h3></div>';return}el.innerHTML=list.map(s=>`<label class="song-picker-row ${selectedPickerSongIds.has(s.id)?"selected":""}"><input type="checkbox" value="${esc(s.id)}" ${selectedPickerSongIds.has(s.id)?"checked":""}><span class="song-picker-row-info"><span class="song-picker-title">${esc(s.title)}</span><span class="song-picker-artist">${esc(s.artist)}</span></span></label>`).join("");el.querySelectorAll("input").forEach(input=>input.onchange=()=>{if(input.checked)selectedPickerSongIds.add(input.value);else selectedPickerSongIds.delete(input.value);input.closest(".song-picker-row").classList.toggle("selected",input.checked)})}
-function confirmAddSongs(){const p=playlists.find(x=>x.id===currentPlaylistId);if(!p)return;p.songIds=[...selectedPickerSongIds];p.updatedAt=new Date().toISOString();save();closeSongPicker();openPlaylistDetail(currentPlaylistId)}
-function deletePlaylist(){const p=playlists.find(x=>x.id===currentPlaylistId);if(!p)return;if(confirm(`「${p.name}」を削除しますか？\n曲自体は削除されません。`)){playlists=playlists.filter(x=>x.id!==currentPlaylistId);save();currentPlaylistId=null;showView("listView")}}
+async function confirmAddSongs(){
+  const p=playlists.find(x=>x.id===currentPlaylistId);if(!p)return;
+  const oldIds=[...p.songIds];
+  p.songIds=[...selectedPickerSongIds];p.updatedAt=new Date().toISOString();save();closeSongPicker();openPlaylistDetail(currentPlaylistId);
+  if(youtubeAccessToken&&p.youtubePlaylistId){
+    try{await syncPlaylistSongs(p,oldIds);p.updatedAt=new Date().toISOString();save();openPlaylistDetail(currentPlaylistId);}
+    catch(e){alert("アプリ側は更新しましたが、YouTube側の同期に失敗しました。\n"+e.message);}
+  }
+}
+async function deletePlaylist(){
+  const p=playlists.find(x=>x.id===currentPlaylistId);if(!p)return;
+  if(!confirm(`「${p.name}」を削除しますか？\n曲自体は削除されません。`))return;
+  playlists=playlists.filter(x=>x.id!==currentPlaylistId);save();currentPlaylistId=null;showView("listView");
+  if(youtubeAccessToken&&p.youtubePlaylistId){
+    try{await deleteYouTubePlaylist(p);}
+    catch(e){alert("アプリ側からは削除しましたが、YouTube側の削除に失敗しました。\n"+e.message);}
+  }
+}
 $("addTagBtn").onclick=addTag;$("tagInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addTag()}});
-$("resetFilterBtn").onclick=()=>{["searchInput","genreFilter","yearFilter","seasonFilter","tagFilter"].forEach(id=>$(id).value="");$("sortSelect").value="newest";selectedArtist="";renderListView()};
+$("resetFilterBtn").onclick=()=>{["searchInput","genreFilter","yearFilter","seasonFilter","tagFilter"].forEach(id=>$(id).value="");$("sortSelect").value="newest";selectedArtist="";updateFilterUI();renderListView()};
+$("filterToggleBtn").onclick=()=>{const panel=$("filterPanel"),open=panel.classList.contains("hidden");panel.classList.toggle("hidden",!open);$("filterToggleBtn").setAttribute("aria-expanded",String(open));$("filterToggleBtn").classList.toggle("active",open)};
+$("clearSearchBtn").onclick=()=>{$("searchInput").value="";renderList()};
 $("songsTab").onclick=()=>{listMode="songs";selectedArtist="";renderListView()};$("artistsTab").onclick=()=>{listMode="artists";selectedArtist="";renderListView()};$("playlistsTab").onclick=()=>{listMode="playlists";selectedArtist="";renderListView()};
-$("createPlaylistBtn").onclick=()=>openPlaylistModal();$("savePlaylistBtn").onclick=savePlaylist;$("renamePlaylistBtn").onclick=()=>openPlaylistModal(currentPlaylistId);$("deletePlaylistBtn").onclick=deletePlaylist;$("addSongsToPlaylistBtn").onclick=openSongPicker;$("confirmAddSongsBtn").onclick=confirmAddSongs;$("playlistSongSearch").addEventListener("input",renderSongPicker);
+$("createPlaylistBtn").onclick=()=>openPlaylistModal();$("savePlaylistBtn").onclick=savePlaylist;$("youtubeConnectBtn").onclick=connectYouTube;$("playYoutubePlaylistBtn").onclick=openYouTubePlaylist;$("renamePlaylistBtn").onclick=()=>openPlaylistModal(currentPlaylistId);$("deletePlaylistBtn").onclick=deletePlaylist;$("addSongsToPlaylistBtn").onclick=openSongPicker;$("confirmAddSongsBtn").onclick=confirmAddSongs;$("playlistSongSearch").addEventListener("input",renderSongPicker);
 $("artistDetailBackBtn").onclick=()=>{selectedArtist="";showView("listView")};$("playlistDetailBackBtn").onclick=()=>{currentPlaylistId=null;showView("listView")};$("detailBackBtn").onclick=()=>showView(previousView==="formView"?"listView":previousView);$("editBtn").onclick=editCurrent;$("deleteBtn").onclick=deleteCurrent;$("cancelBtn").onclick=()=>showView(previousView==="detailView"?"listView":previousView);$("formBackBtn").onclick=()=>showView(previousView==="detailView"?"detailView":previousView);
 document.querySelectorAll("[data-close-modal]").forEach(b=>b.onclick=closePlaylistModal);document.querySelectorAll("[data-close-song-picker]").forEach(b=>b.onclick=closeSongPicker);
 document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{if(b.dataset.view==="formView")openNew();else showView(b.dataset.view)});
 ["searchInput","genreFilter","yearFilter","seasonFilter","tagFilter","sortSelect"].forEach(id=>$(id).addEventListener("input",renderList));
-populateYears();populateFilters();renderListView();renderHome();
+populateYears();populateFilters();renderListView();renderHome();setTimeout(initYouTubeAuth,500);

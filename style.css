@@ -11,7 +11,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .primary-btn,.secondary-btn,.danger-btn,.back-btn{border:0;border-radius:11px;padding:10px 14px}.primary-btn{background:var(--accent);color:#fff;box-shadow:0 5px 12px rgba(143,122,200,.2)}.primary-btn:hover{background:var(--accent-dark)}.secondary-btn{background:#f1eff5;color:#403b49}.danger-btn{background:#fff1f2;color:#c14b58}.back-btn{background:transparent;color:var(--accent-dark);padding-left:0;font-weight:600}
 .search-box{margin-bottom:10px}.search-box input,.filter-grid select,.form-card input,.form-card select,.form-card textarea{width:100%;border:1px solid #ddd8e7;border-radius:11px;padding:11px 12px;background:#fff;outline:none;color:#302d37}.search-box input{height:46px;padding-left:15px;box-shadow:0 3px 14px rgba(50,42,70,.025)}.search-box input:focus,.form-card input:focus,.form-card select:focus,.form-card textarea:focus{border-color:#b5a6da;box-shadow:0 0 0 3px rgba(143,122,200,.1)}
 .filter-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0 17px}.filter-grid select{font-size:13px}.filter-actions{display:flex;justify-content:flex-end;margin:-3px 0 14px}.result-count{font-size:12px;color:var(--muted);margin-bottom:8px}
-.song-list{display:grid;gap:8px}.song-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px;box-shadow:0 3px 14px rgba(50,42,70,.025);transition:transform .15s,border-color .15s,box-shadow .15s}.song-card:hover{border-color:#c8bde1;box-shadow:0 7px 20px rgba(50,42,70,.07);transform:translateY(-1px)}.song-main{display:flex;justify-content:space-between;gap:15px}.song-title{font-size:16px;font-weight:700;margin:0 0 4px;letter-spacing:-.01em}.song-artist{font-size:13px;color:#625d6b}.song-work{font-size:12px;color:var(--muted);margin-top:4px}.song-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.badge{font-size:11px;padding:4px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-dark)}.tag{font-size:11px;padding:4px 8px;border-radius:999px;background:#f2f0f4;color:#625d6b}.song-date{font-size:11px;color:#aaa5b2;white-space:nowrap}
+.song-list{display:grid;gap:6px}.song-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 2px 9px rgba(50,42,70,.025);transition:transform .15s,border-color .15s,box-shadow .15s;cursor:pointer}.song-card:hover{border-color:#c8bde1;box-shadow:0 6px 16px rgba(50,42,70,.06);transform:translateY(-1px)}.song-list-main{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}.song-list-info{min-width:0}.song-title{font-size:15px;font-weight:700;margin:0 0 3px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.song-artist{font-size:12px;color:#625d6b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.song-list-right{display:flex;align-items:center;gap:9px;flex:0 0 auto}.song-year{font-size:11px;color:var(--muted);white-space:nowrap}.song-arrow{font-size:21px;line-height:1;color:#aaa5b2}.badge{font-size:11px;padding:4px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-dark)}.tag{font-size:11px;padding:4px 8px;border-radius:999px;background:#f2f0f4;color:#625d6b}.song-date{font-size:11px;color:#aaa5b2;white-space:nowrap}
 .list-toggle{display:flex;gap:4px;margin:0 0 17px;background:#eeebf3;border-radius:12px;padding:4px;max-width:500px}.list-tab{flex:1;border:0;background:transparent;color:#817c8f;padding:9px 18px;border-radius:9px;font-weight:600;font-size:13px}.list-tab.active{background:#fff;color:var(--accent-dark);box-shadow:0 2px 8px rgba(50,42,70,.08)}
 .artist-list{display:grid;gap:22px}.artist-group{display:grid;gap:7px}.artist-group-heading{margin:0;padding:0 4px;font-size:16px;font-weight:800;line-height:1.3;color:var(--accent-dark)}.artist-group-list{display:grid;gap:7px}.artist-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:left;color:#292630;box-shadow:0 2px 10px rgba(50,42,70,.025);transition:.15s}.artist-row:hover{border-color:#c8bde1;transform:translateY(-1px)}.artist-row-right{display:flex;align-items:center;gap:9px}.artist-name{font-size:15px;font-weight:700}.artist-count{font-size:12px;color:var(--muted);white-space:nowrap}.artist-arrow{font-size:22px;color:#a39eaa;line-height:1}
 .artist-detail-heading{background:linear-gradient(135deg,#f2eef9,#faf9fc);border:1px solid #e3ddec;border-radius:17px;padding:19px 20px;margin-bottom:14px}.artist-detail-heading h2{margin:0;font-size:23px;letter-spacing:-.02em}.artist-detail-heading:after{content:"アーティスト";display:block;margin-top:4px;color:var(--muted);font-size:11px}.artist-song-card{padding:14px 17px}.artist-song-card .song-main{margin:0}.artist-song-card .song-title{margin:0;font-size:15px}
@@ -19,6 +19,68 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .detail-card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:26px;max-width:720px;margin:auto;box-shadow:0 5px 22px rgba(50,42,70,.04)}.detail-label{color:var(--muted);font-size:11px;margin-top:20px}.detail-value{font-size:15px;margin-top:5px;white-space:pre-wrap}.detail-title{font-size:29px;margin:0 0 6px;letter-spacing:-.025em}.detail-artist{font-size:16px;color:#625d6b}.link-btn{display:inline-block;margin-top:8px;color:var(--accent-dark);text-decoration:none;font-weight:600}.detail-actions{display:flex;gap:7px}
 .empty-state{text-align:center;padding:55px 20px;color:var(--muted)}.empty-icon{font-size:42px;color:var(--accent)}.empty-state h3{color:#37323f;margin-bottom:6px}.hidden{display:none!important}
 .bottom-nav{position:fixed;z-index:110;bottom:10px;left:50%;transform:translateX(-50%);width:min(520px,calc(100% - 24px));height:64px;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:20px;display:flex;justify-content:center;box-shadow:0 8px 28px rgba(50,42,70,.11)}.nav-btn{flex:1;border:0;background:transparent;color:#8b8693;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;border-radius:16px;margin:5px;gap:2px}.nav-btn span:last-child{font-size:10px}.nav-icon{font-size:19px;line-height:1}.nav-btn.active{color:var(--accent-dark);background:var(--accent-soft);font-weight:700}.nav-btn.add-nav .nav-icon{width:28px;height:28px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:20px;box-shadow:0 4px 10px rgba(143,122,200,.22)}
-@media(max-width:700px){.app-header{padding:13px 14px}.brand-mark{width:36px;height:36px;border-radius:11px}.app-header h1{font-size:19px}.app-header p{display:none}.container{padding:80px 13px 20px}.stats{gap:7px;margin-bottom:27px}.stat-card{padding:13px 10px;border-radius:14px}.stat-card strong{font-size:22px}.filter-grid{grid-template-columns:1fr 1fr}.filter-grid select:last-child{grid-column:1/-1}.two-col{grid-template-columns:1fr}.form-card{padding:18px}.detail-card{padding:20px}.detail-title{font-size:24px}.song-card{padding:13px 14px}.song-date{display:none}.list-toggle{max-width:none}.artist-row{padding:12px 13px}.artist-name{font-size:14px}.artist-detail-heading{padding:16px}.artist-detail-heading h2{font-size:20px}.bottom-nav{bottom:8px}.form-card input,.form-card select,.form-card textarea,.search-box input{font-size:16px!important}}
+@media(max-width:700px){.app-header{padding:13px 14px}.brand-mark{width:36px;height:36px;border-radius:11px}.app-header h1{font-size:19px}.app-header p{display:none}.container{padding:80px 13px 20px}.stats{gap:7px;margin-bottom:27px}.stat-card{padding:13px 10px;border-radius:14px}.stat-card strong{font-size:22px}.filter-grid{grid-template-columns:1fr 1fr}.filter-grid select:last-child{grid-column:1/-1}.two-col{grid-template-columns:1fr}.form-card{padding:18px}.detail-card{padding:20px}.detail-title{font-size:24px}.song-card{padding:11px 13px}.song-title{font-size:14px}.song-artist{font-size:11px}.song-year{font-size:10px}.song-arrow{font-size:20px}.list-toggle{max-width:none}.artist-row{padding:12px 13px}.artist-name{font-size:14px}.artist-detail-heading{padding:16px}.artist-detail-heading h2{font-size:20px}.bottom-nav{bottom:8px}.form-card input,.form-card select,.form-card textarea,.search-box input{font-size:16px!important}}
 .playlist-toolbar{display:flex;justify-content:flex-end;margin:-2px 0 14px}.playlist-list{display:grid;gap:8px}.playlist-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:left;box-shadow:0 2px 10px rgba(50,42,70,.025);transition:.15s}.playlist-row:hover{border-color:#c8bde1;transform:translateY(-1px)}.playlist-main{display:flex;align-items:center;gap:12px;min-width:0}.playlist-cover{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--accent-soft),#e5dff3);color:var(--accent-dark);display:grid;place-items:center;font-size:22px;font-weight:700}.playlist-name{font-size:15px;font-weight:700}.playlist-description{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:600px}.playlist-row-right{display:flex;align-items:center;gap:10px;color:var(--muted);white-space:nowrap}.playlist-count{font-size:12px}.playlist-arrow{font-size:22px;color:#a39eaa}.playlist-detail-heading{position:relative}.playlist-detail-count{margin-top:5px;color:var(--muted);font-size:12px}.playlist-detail-actions{display:flex;justify-content:flex-end;margin:-2px 0 12px}.playlist-song-card{padding:13px 17px}.playlist-song-card .song-title{margin:0;font-size:15px}.modal{position:fixed;inset:0;z-index:300;display:grid;place-items:center}.modal-backdrop{position:absolute;inset:0;background:rgba(35,31,45,.38);backdrop-filter:blur(3px)}.modal-card{position:relative;width:min(520px,calc(100% - 28px));max-height:85vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:19px;padding:20px;box-shadow:0 18px 55px rgba(35,31,45,.2)}.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.modal-header h3{margin:0;font-size:19px}.modal-close{border:0;background:#f1eff5;color:#625d6b;width:32px;height:32px;border-radius:10px;font-size:20px}.modal-card label{display:block;font-size:13px;font-weight:600;margin-bottom:16px}.modal-card input,.modal-card textarea{width:100%;margin-top:7px;border:1px solid #ddd8e7;border-radius:11px;padding:11px 12px;outline:none;background:#fff}.modal-card input:focus,.modal-card textarea:focus{border-color:#b5a6da;box-shadow:0 0 0 3px rgba(143,122,200,.1)}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}.picker-card{width:min(600px,calc(100% - 24px))}.song-picker-list{display:grid;gap:6px;max-height:48vh;overflow:auto}.song-picker-row{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer}.song-picker-row input{width:18px;height:18px;accent-color:var(--accent)}.song-picker-row-info{min-width:0}.song-picker-title{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.song-picker-artist{font-size:12px;color:var(--muted);margin-top:2px}.song-picker-row.selected{background:var(--accent-soft);border-color:#c8bde1}
 @media(max-width:700px){.playlist-toolbar{margin-top:-2px}.playlist-toolbar .primary-btn{width:100%}.playlist-row{padding:13px}.playlist-cover{width:40px;height:40px}.playlist-description{max-width:170px}.playlist-detail-actions{margin-top:0}.modal-card{padding:17px}}
+
+/* Library search / filter organization */
+.library-tools{margin-bottom:14px}.search-row{display:flex;align-items:stretch;gap:8px}.library-search{position:relative;flex:1;margin:0}.library-search input{padding-left:38px;padding-right:38px}.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-52%);font-size:21px;color:#8f8998;pointer-events:none}.clear-search{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:#eeeaf2;color:#77717f;width:27px;height:27px;border-radius:50%;font-size:17px;line-height:1}.tool-btn{border:1px solid var(--line);background:#fff;color:#4c4655;border-radius:11px;padding:0 14px;font-size:13px;font-weight:700;white-space:nowrap}.tool-btn:hover{border-color:#c8bde1;background:#faf9fc}.filter-count{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;margin-left:5px;border-radius:999px;background:var(--accent);color:#fff;font-size:10px}.filter-panel{margin-top:8px;padding:11px;border:1px solid #e3ddec;background:#faf9fc;border-radius:13px}.filter-panel .filter-grid{margin:0;grid-template-columns:repeat(4,1fr);gap:7px}.filter-panel-footer{display:flex;justify-content:flex-end;margin-top:8px}.text-reset-btn{border:0;background:transparent;color:var(--accent-dark);font-size:12px;font-weight:700;padding:4px 2px}.list-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.result-count{margin:0}.sort-control{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;white-space:nowrap}.sort-control select{width:auto;min-width:175px;font-size:12px;padding:8px 30px 8px 10px}.filter-actions{display:none}
+@media(max-width:700px){.search-row{gap:7px}.tool-btn{padding:0 11px}.filter-panel .filter-grid{grid-template-columns:1fr 1fr}.list-controls{align-items:flex-start}.sort-control{flex:1;justify-content:flex-end}.sort-control span{display:none}.sort-control select{min-width:145px;max-width:58vw}.filter-panel{padding:9px}}
+
+/* 曲一覧：頭文字インデックス */
+.song-index{
+  position:sticky;
+  top:8px;
+  z-index:5;
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:0 0 12px;
+  padding:8px;
+  background:rgba(250,249,252,.94);
+  border:1px solid #e3ddec;
+  border-radius:13px;
+  backdrop-filter:blur(8px);
+}
+.song-index-btn{
+  min-width:30px;
+  height:30px;
+  padding:0 7px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#fff;
+  color:#514b5a;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.song-index-btn:hover,
+.song-index-btn:active{
+  border-color:#c8bde1;
+  background:#f5f1fb;
+}
+.song-group{scroll-margin-top:82px}
+.song-group + .song-group{margin-top:16px}
+.song-group-heading{
+  margin:0 0 7px;
+  padding:0 5px;
+  font-size:16px;
+  font-weight:800;
+  line-height:1.3;
+  color:var(--accent-dark);
+}
+.song-group-list{display:grid;gap:6px}
+@media (max-width:600px){
+  .song-index{gap:4px;padding:7px;top:6px}
+  .song-index-btn{min-width:28px;height:28px;padding:0 6px;font-size:11px}
+  .song-group{scroll-margin-top:72px}
+}
+
+/* YouTube連携 */
+.playlist-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.youtube-connection-status{margin:8px 0 14px;color:var(--muted);font-size:12px}
+.playlist-detail-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.playlist-detail-actions .primary-btn{flex:0 0 auto}
+@media(max-width:600px){
+  .playlist-detail-actions button,.playlist-toolbar button{flex:1}
+}
