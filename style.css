@@ -58,3 +58,9 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}
 .playlist-toolbar #youtubeConnectBtn{
   font-size:14px;
 }
+
+
+/* バックアップ / 復元 */
+.data-management-card{margin-top:28px;padding:18px;background:#fff;border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:18px;box-shadow:0 2px 10px rgba(50,42,70,.025)}
+.data-management-copy h3{margin:0 0 5px;font-size:15px;color:#37323f}.data-management-copy p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}.data-management-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.data-management-actions button{white-space:nowrap;font-size:13px}
+@media(max-width:700px){.data-management-card{align-items:stretch;flex-direction:column;padding:15px}.data-management-actions{display:grid;grid-template-columns:1fr 1fr}.data-management-actions button{width:100%;font-size:12px;padding-left:8px;padding-right:8px}}

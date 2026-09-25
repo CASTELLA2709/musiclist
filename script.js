@@ -189,6 +189,44 @@ function openYouTubePlaylist(){
 const $=id=>document.getElementById(id);
 const views=document.querySelectorAll(".view");
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(songs));localStorage.setItem(PLAYLIST_STORAGE_KEY,JSON.stringify(playlists))}
+function exportBackup(){
+  const backup={
+    app:"Music Memory",
+    version:1,
+    exportedAt:new Date().toISOString(),
+    songs,
+    playlists
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,"0");
+  a.href=url;
+  a.download=`music-memory-backup-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function importBackupFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data||!Array.isArray(data.songs)||!Array.isArray(data.playlists))throw new Error("invalid");
+      if(!confirm(`バックアップから復元しますか？\n現在のデータはバックアップ内のデータに置き換わります。\n\n曲：${data.songs.length}件\nプレイリスト：${data.playlists.length}件`))return;
+      songs=data.songs;playlists=data.playlists;save();
+      currentDetailId=null;currentPlaylistId=null;selectedArtist="";
+      populateFilters();renderHome();renderListView();showView("homeView");
+      alert("バックアップから復元しました。");
+    }catch(e){
+      alert("バックアップファイルを読み込めませんでした。Music Memoryで作成したJSONファイルを選択してください。");
+    }finally{$("backupFileInput").value="";}
+  };
+  reader.onerror=()=>{alert("ファイルの読み込みに失敗しました。");$("backupFileInput").value="";};
+  reader.readAsText(file);
+}
+
 function esc(v=""){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function formatDate(v){return new Date(v).toLocaleDateString("ja-JP",{year:"numeric",month:"2-digit",day:"2-digit"})}
 function showView(id){
@@ -430,6 +468,7 @@ async function deletePlaylist(){
     catch(e){alert("アプリ側からは削除しましたが、YouTube側の削除に失敗しました。\n"+e.message);}
   }
 }
+$("exportBackupBtn").onclick=exportBackup;$("importBackupBtn").onclick=()=>$("backupFileInput").click();$("backupFileInput").onchange=e=>importBackupFile(e.target.files?.[0]);
 $("addTagBtn").onclick=addTag;$("tagInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addTag()}});
 $("resetFilterBtn").onclick=()=>{["searchInput","genreFilter","yearFilter","seasonFilter","tagFilter"].forEach(id=>$(id).value="");selectedArtist="";updateFilterUI();renderListView()};
 $("filterToggleBtn").onclick=()=>{const panel=$("filterPanel"),open=panel.classList.contains("hidden");panel.classList.toggle("hidden",!open);$("filterToggleBtn").setAttribute("aria-expanded",String(open));$("filterToggleBtn").classList.toggle("active",open)};

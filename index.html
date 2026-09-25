@@ -38,6 +38,18 @@
         <button class="text-btn" data-view="listView">すべて見る →</button>
       </div>
       <div id="recentSongs" class="song-list"></div>
+
+      <div class="data-management-card">
+        <div class="data-management-copy">
+          <h3>バックアップ</h3>
+          <p>登録した曲とプレイリストをJSONファイルに保存・復元できます。</p>
+        </div>
+        <div class="data-management-actions">
+          <button type="button" id="exportBackupBtn" class="secondary-btn">バックアップを保存</button>
+          <button type="button" id="importBackupBtn" class="secondary-btn">バックアップから復元</button>
+          <input type="file" id="backupFileInput" accept="application/json,.json" class="hidden">
+        </div>
+      </div>
     </section>
 
     <section id="listView" class="view">
